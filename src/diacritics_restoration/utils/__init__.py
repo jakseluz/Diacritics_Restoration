@@ -1,3 +1,13 @@
-from .dataset import get_wikipedia_data, non_polish_cleanup
+from .dataset import DiacriticsDataset, get_wikipedia_data, non_polish_cleanup, CharacterProcessor
+from .training import train_model, predict
+from .restorer import DiacriticsRestorer
 
-__all__ = ["get_wikipedia_data", "non_polish_cleanup"]
+__all__ = [
+    "DiacriticsDataset",
+    "get_wikipedia_data",
+    "non_polish_cleanup",
+    "CharacterProcessor",
+    "train_model",
+    "predict",
+    "DiacriticsRestorer",
+]

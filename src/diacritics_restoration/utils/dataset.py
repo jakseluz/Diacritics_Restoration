@@ -3,6 +3,38 @@ import pandas as pd
 import random
 import unidecode
 
+import torch
+from torch.utils.data import Dataset, DataLoader
+
+from .processor import CharacterProcessor
+
+
+class DiacriticsDataset(Dataset):
+    def __init__(self, texts: list[str], window_size: int = 256, step: int = 100):
+        self.processor = CharacterProcessor()
+
+        self.linux_x = []  # :)
+        self.linux_y = []
+
+        for text in texts:
+            for i in range(0, len(text) - window_size + 1, step):
+                y_window = text[i : i + window_size]
+                x_window = unidecode.unidecode(y_window)
+
+                self.linux_x.append(x_window)
+                self.linux_y.append(y_window)
+
+    def text_to_tensor(self, text: str) -> torch.Tensor:
+        return torch.tensor(self.processor.text_to_sequence(text), dtype=torch.long)
+
+    def __len__(self):
+        return len(self.linux_x)
+
+    def __getitem__(self, idx):
+        x = self.text_to_tensor(self.linux_x[idx])
+        y = self.text_to_tensor(self.linux_y[idx])
+        return x, y
+
 
 def get_wikipedia_data(num_articles=100, wiki_version="20231101.pl") -> pd.DataFrame:
     """
@@ -26,34 +58,3 @@ def get_wikipedia_data(num_articles=100, wiki_version="20231101.pl") -> pd.DataF
     indexes = random.sample(range(len(df_wiki)), num_articles)
     df_wiki: pd.DataFrame = df_wiki.iloc[indexes].reset_index(drop=True)
     return df_wiki
-
-
-def non_polish_cleanup(text: str) -> str:
-    """
-    Clean up the text by removing non-Polish characters.
-    Args:
-        text (str): The input text to clean.
-    Returns:
-        str: The cleaned text.
-    """
-    characters = set(text)
-    polish_characters = set("aąbcćdeęfghijklłmnńoópqrsśtuvwxyzźżAĄBCĆDEĘFGHIJKLŁMNŃOÓPQRSŚTUVWXYZŹŻ")
-
-    to_remove = "".join([char for char in characters if char.isalpha() and char not in polish_characters])
-
-    table = str.maketrans("", "", to_remove)
-    return text.translate(table)
-
-
-def prepare_data(text: str) -> (str, str):
-    """
-    Prepare the data by creating a pair of original and cleaned text.
-    Args:
-        text (str): The input text to prepare.
-    Returns:
-        (str, str): A tuple containing the cleaned text and the original text.
-    """
-    y_target = non_polish_cleanup(text)
-    x_input = unidecode.unidecode(y_target)
-
-    return x_input, y_target
