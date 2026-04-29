@@ -1,5 +1,5 @@
 from .dataset import DiacriticsDataset, get_wikipedia_data, CharacterProcessor
-from .training import train_model, predict
+from .training import train_model
 from .restorer import DiacriticsRestorer
 
 __all__ = [
@@ -7,6 +7,5 @@ __all__ = [
     "get_wikipedia_data",
     "CharacterProcessor",
     "train_model",
-    "predict",
     "DiacriticsRestorer",
 ]

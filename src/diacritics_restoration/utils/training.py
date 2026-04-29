@@ -2,11 +2,14 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 import os
+from datetime import datetime
 
 
 def train_model(model, dataloader, epochs, optimizer, criterion, save_path="best_model.pt"):
     save_dir = "models/{}".format(model.__class__.__name__)
     os.makedirs(save_dir, exist_ok=True)
+
+    file_details = f"{model.__class__.__name__}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_{save_path}"
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -44,6 +47,6 @@ def train_model(model, dataloader, epochs, optimizer, criterion, save_path="best
         if avg_loss < best_loss:
             best_loss = avg_loss
 
-            model_path = os.path.join(save_dir, save_path)
+            model_path = os.path.join(save_dir, file_details)
             torch.save(model.state_dict(), model_path)
             print(f"Best model saved ({model_path}) with loss: {best_loss}")

@@ -22,5 +22,6 @@ dependencies = [
     "seaborn",
     "evaluate",
     "jiwer",
-    "matplotlib-inline"
+    "matplotlib-inline",
+    "torchinfo"
 ]
