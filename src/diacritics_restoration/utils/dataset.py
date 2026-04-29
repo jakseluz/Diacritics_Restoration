@@ -1,6 +1,7 @@
 from datasets import load_dataset
 import pandas as pd
 import random
+import unidecode
 
 
 def get_wikipedia_data(num_articles=100, wiki_version="20231101.pl") -> pd.DataFrame:
@@ -42,3 +43,17 @@ def non_polish_cleanup(text: str) -> str:
 
     table = str.maketrans("", "", to_remove)
     return text.translate(table)
+
+
+def prepare_data(text: str) -> (str, str):
+    """
+    Prepare the data by creating a pair of original and cleaned text.
+    Args:
+        text (str): The input text to prepare.
+    Returns:
+        (str, str): A tuple containing the cleaned text and the original text.
+    """
+    y_target = non_polish_cleanup(text)
+    x_input = unidecode.unidecode(y_target)
+
+    return x_input, y_target
