@@ -31,9 +31,12 @@ class DiacriticsRestorer:
         }
         self.trans_table = str.maketrans(mapping)
 
+        self.texts_history = dict()
+
     def restore(self, text):
+        original_text = text
         self.model.eval()
-        original_length = len(text)
+        original_length = len(original_text)
         text = text.translate(self.trans_table)
         tokens = self.processor.text_to_sequence(text)
 
@@ -49,4 +52,22 @@ class DiacriticsRestorer:
 
         restored_text = self.processor.sequence_to_text(predicted_ids[:original_length])
 
+        self.texts_history[original_text] = restored_text
+
         return restored_text
+
+    def calculate_character_error_rate(self, original_text, restored_text):
+        original_chars = list(original_text)
+        restored_chars = list(restored_text)
+
+        total_chars = len(original_chars)
+        differences = 0
+        for o, r in zip(original_chars, restored_chars):
+            if o != r:
+                differences += 1
+        return differences / total_chars if total_chars > 0 else 0.0
+
+    def calculate_history_character_error_rate(self):
+        originals = "".join(self.texts_history.keys())
+        restores = "".join(self.texts_history.values())
+        return self.calculate_character_error_rate(originals, restores)
