@@ -23,6 +23,7 @@ You can also probably work with other tools like pip:
 ``` bash
 pip install -r requirements.txt
 ```
+PS: In order not to have problems with your local CUDA configuration etc., please check [Pytorch prerequisites](https://pytorch.org/get-started/locally/) and copy a command to install Pytorch properly.
 
 ## Usage
 

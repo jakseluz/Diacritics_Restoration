@@ -8,7 +8,19 @@ version = "0.1.0"
 description = "A project for restoring diacritics in Polish text."
 readme = "README.md"
 requires-python = ">=3.10"
-dynamic = ["dependencies"]
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]} # Temporarily using requirements.txt
+dependencies = [
+    "unidecode",
+    "transformers",
+    "datasets",
+    "torch",
+    "torchvision",
+    "tqdm",
+    "pandas",
+    "scikit-learn",
+    "numpy",
+    "matplotlib",
+    "seaborn",
+    "evaluate",
+    "jiwer",
+    "matplotlib-inline"
+]

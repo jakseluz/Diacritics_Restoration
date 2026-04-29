@@ -27,6 +27,7 @@ debugpy=1.8.20=py312h8285ef7_0
 decorator=5.2.1=pyhd8ed1ab_0
 diacritics-restoration=0.1.0=pypi_0
 dill=0.4.1=pypi_0
+evaluate=0.4.6=pypi_0
 executing=2.2.1=pyhd8ed1ab_0
 filelock=3.29.0=pypi_0
 frozenlist=1.8.0=pypi_0
@@ -42,6 +43,7 @@ ipython=9.13.0=pyh53cf698_0
 ipython_pygments_lexers=1.1.1=pyhd8ed1ab_0
 jedi=0.19.2=pyhd8ed1ab_1
 jinja2=3.1.6=pypi_0
+jiwer=4.0.0=pypi_0
 jupyter_client=8.8.0=pyhcf101f3_0
 jupyter_core=5.9.1=pyhc90fa1f_0
 keyutils=1.6.3=hb9d3cd8_0
@@ -106,6 +108,7 @@ python-gil=3.12.13=hd8ed1ab_0
 python_abi=3.12=3_cp312
 pyyaml=6.0.3=pypi_0
 pyzmq=27.1.0=py312hda471dd_2
+rapidfuzz=3.14.5=pypi_0
 readline=8.3=hc2a1206_0
 requests=2.33.1=pypi_0
 rich=15.0.0=pypi_0
@@ -125,6 +128,7 @@ triton=3.6.0=pypi_0
 typer=0.25.0=pypi_0
 typing_extensions=4.15.0=pyhcf101f3_0
 tzdata=2026a=he532380_0
+unidecode=1.4.0=pypi_0
 urllib3=2.6.3=pypi_0
 wcwidth=0.6.0=pyhd8ed1ab_0
 wheel=0.46.3=py312h06a4308_0
