@@ -12,6 +12,7 @@ def evaluate_restorer_on_articles(restorer: DiacriticsRestorer, num_articles=100
 
     device = restorer.device
     model = restorer.model
+    pad_id = dataset.processor.pad_token_id
 
     pred_ids, true_ids, conf = predict_on_loader(
         model=model, dataloader=dataloader, device=device, return_confidence=True
@@ -20,17 +21,23 @@ def evaluate_restorer_on_articles(restorer: DiacriticsRestorer, num_articles=100
     pred_texts = decode_batch(dataset.processor, pred_ids[:3])
     true_texts = decode_batch(dataset.processor, true_ids[:3])
 
-    general_differences = 0.0
     for i, (predicted, expected) in enumerate(zip(pred_texts, true_texts)):
         differences = sum(1 for p, t in zip(predicted, expected) if p != t)
-        general_differences += differences
         print(f"\nExample {i}")
         print("PRED:", predicted)
         print("TRUE:", expected)
-        # print("CONF:", conf[i])
         print(f"Differences: {differences} / {len(expected)}")
 
-    print(f"\nOverall Character Error Rate: {general_differences / len(dataset):.4f}")
+    mask = true_ids != pad_id
+    total_differences = (pred_ids[mask] != true_ids[mask]).sum().item()
+    total_chars = mask.sum().item()
+    general_differences = (
+        total_differences / total_chars if total_chars > 0 else 0.0
+    )
+
+    print(
+        f"\nOverall Character Error Rate: {general_differences:.6f} ({total_differences} differences out of {total_chars} characters)"
+    )
 
 
 def predict_on_loader(model, dataloader: DataLoader, device, *, return_confidence: bool = False):
