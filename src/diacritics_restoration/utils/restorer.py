@@ -24,7 +24,7 @@ class DiacriticsRestorer:
         self.window_size = window_size
         self.overlap = max(0, int(overlap))
 
-        mapping = {
+        self.mapping = {
             "ą": "a",
             "ć": "c",
             "ę": "e",
@@ -44,7 +44,7 @@ class DiacriticsRestorer:
             "Ź": "Z",
             "Ż": "Z",
         }
-        self.trans_table = str.maketrans(mapping)
+        self.trans_table = str.maketrans(self.mapping)
         self.texts_history: dict[str, str] = dict()
 
     def restore(self, text):
@@ -135,21 +135,43 @@ class DiacriticsRestorer:
         self.texts_history[original_text] = restored_text
         return restored_text
 
-    def calculate_character_error_rate(self, original_text, restored_text):
-        original_chars = list(original_text)
-        restored_chars = list(restored_text)
-
-        total_chars = len(original_chars)
+    def calculate_character_error_rate(
+        self, original_chars: list[str], restored_chars: list[str]
+    ) -> float:
+        total_chars = 0
         differences = 0
-        for o, r in zip(original_chars, restored_chars):
-            if o != r:
-                differences += 1
-        return differences / total_chars if total_chars > 0 else 0.0
+
+        for original, restored in zip(original_chars, restored_chars):
+            total_chars += len(original)
+            for o, r in zip(original, restored):
+                if o != r:
+                    differences += 1
+        return float(differences / total_chars if total_chars > 0 else 0.0)
 
     def calculate_history_character_error_rate(self):
-        originals = "".join(self.texts_history.keys())
-        restores = "".join(self.texts_history.values())
+        originals = list(self.texts_history.keys())
+        restores = list(self.texts_history.values())
         return self.calculate_character_error_rate(originals, restores)
+
+    def calculate_history_diacritics_error_rate(self) -> float:
+        originals = list(self.texts_history.keys())
+        restores = list(self.texts_history.values())
+        diacritics_length = 0
+        diacritics_errors = 0
+        diacritics = set(self.mapping.keys())
+        print(diacritics)
+        for original, restored in zip(originals, restores):
+            print(original, restored)
+            for i, (o, r) in enumerate(zip(original, restored)):
+                if o in diacritics:
+                    diacritics_length += 1
+                    if o != r:
+                        diacritics_errors += 1
+        return float(
+            (diacritics_errors / diacritics_length)
+            if diacritics_length > 0
+            else 0.0
+        )
 
 
 class ByT5DiacriticsRestorer(DiacriticsRestorer):
