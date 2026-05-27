@@ -202,23 +202,74 @@ class ByT5DiacriticsRestorer(DiacriticsRestorer):
         self.trans_table = str.maketrans(mapping)
         self.texts_history: dict[str, str] = {}
 
-    def _chunks(self, text: str) -> list[str]:
-        if not self.chunk_chars or len(text) <= self.chunk_chars:
-            return [text]
-        return [
-            text[i : i + self.chunk_chars]
-            for i in range(0, len(text), self.chunk_chars)
+    def _normalize_no_diacritics(self, text: str) -> str:
+        return text.translate(self.trans_table)
+
+    def _iter_spans(self, text: str) -> list[tuple[int, int]]:
+        n = len(text)
+        if not self.chunk_chars or n <= self.chunk_chars:
+            return [(0, n)]
+
+        spans: list[tuple[int, int]] = []
+        start = 0
+        while start < n:
+            hard_end = min(start + self.chunk_chars, n)
+            end = hard_end
+
+            if self.prefer_whitespace_split and hard_end < n:
+                window = text[start:hard_end]
+                last_ws = max(
+                    window.rfind(" "), window.rfind("\n"), window.rfind("\t")
+                )
+                if last_ws > max(10, int(0.6 * len(window))):
+                    end = start + last_ws + 1
+
+            spans.append((start, end))
+            if end >= n:
+                break
+
+            start = max(end - self.overlap_chars, start + 1)
+
+        return spans
+
+    def _trim_overlap_from_output(
+        self, output: str, overlap_src_no_diacritics: str
+    ) -> str:
+        if not overlap_src_no_diacritics:
+            return output
+
+        normalized_output = self._normalize_no_diacritics(output)
+        search = normalized_output[
+            : max(128, 3 * len(overlap_src_no_diacritics))
         ]
+        position = search.rfind(overlap_src_no_diacritics)
+        if position != -1:
+            cut_point = position + len(overlap_src_no_diacritics)
+            return output[cut_point:]
+
+        if self.overlap_chars > 0 and len(output) > self.overlap_chars:
+            return output[self.overlap_chars :]
+
+        return output
 
     @torch.no_grad()
     def restore(self, text: str) -> str:
         original_text = text
         self.model.eval()
 
+        if not text:
+            self.texts_history[original_text] = text
+            return text
+
         src_text = text.translate(self.trans_table)
+        spans = self._iter_spans(src_text)
 
         outputs: list[str] = []
-        for chunk in self._chunks(src_text):
+        previous_end = 0
+
+        for start, end in spans:
+            chunk = src_text[start:end]
+
             sequence = self.tokenizer(
                 chunk,
                 return_tensors="pt",
@@ -227,13 +278,36 @@ class ByT5DiacriticsRestorer(DiacriticsRestorer):
             )
             sequence = {k: v.to(self.device) for k, v in sequence.items()}
 
-            gen_ids = self.model.generate(**sequence, **self.generate_kwargs)
+            gen_kwargs = dict(self.generate_kwargs)
+
+            if (
+                "max_new_tokens" not in gen_kwargs
+                and "max_length" not in gen_kwargs
+            ):
+                in_len = int(sequence["input_ids"].shape[1])
+                gen_kwargs["max_new_tokens"] = in_len + 16
+
+            gen_ids = self.model.generate(**sequence, **gen_kwargs)
 
             output_text = self.tokenizer.decode(
                 gen_ids[0], skip_special_tokens=True
             )
+
+            if outputs and start < previous_end:
+                overlap_src = src_text[start:previous_end]
+                output_text = self._trim_overlap_from_output(
+                    output_text, overlap_src
+                )
+
             outputs.append(output_text)
+            previous_end = end
 
         restored_text = "".join(outputs)
+
+        if len(restored_text) < len(original_text):
+            restored_text += original_text[len(restored_text) :]
+        elif len(restored_text) > len(original_text):
+            restored_text = restored_text[: len(original_text)]
+
         self.texts_history[original_text] = restored_text
         return restored_text
