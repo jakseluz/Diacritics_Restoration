@@ -41,8 +41,7 @@ def make_translate_table():
     return str.maketrans(mapping)
 
 
-def remove_diacritics(text: str) -> str:
-    translate_table = make_translate_table()
+def remove_diacritics(text: str, translate_table: dict) -> str:
     return text.translate(translate_table)
 
 
@@ -75,7 +74,7 @@ def main():
         help="Directory to save the trained model",
     )
     ap.add_argument(
-        "--epochs", type=int, default=3, help="Number of training epochs"
+        "--epochs", type=int, default=1, help="Number of training epochs"
     )
     ap.add_argument(
         "--train_batch_size",
@@ -123,24 +122,30 @@ def main():
 
     def preprocess(batch):
         targets = batch["text"]
-        inputs = [remove_diacritics(t) for t in targets]
+        inputs = [remove_diacritics(t, translate_table) for t in targets]
 
         model_inputs = tokenizer(
             inputs,
             truncation=True,
-            padding="max_length",
+            padding=False,
             max_length=args.max_input_length,
         )
 
-        with tokenizer.as_target_tokenizer():
-            labels = tokenizer(
-                targets,
-                truncation=True,
-                padding="max_length",
-                max_length=args.max_input_length,
-            )
+        labels = tokenizer(
+            text_target=targets,
+            truncation=True,
+            padding=False,
+            max_length=args.max_input_length,
+        )
 
-        model_inputs["labels"] = labels["input_ids"]
+        label_ids = labels["input_ids"]
+        pad_id = tokenizer.pad_token_id
+        label_ids = [
+            [(token if token != pad_id else -100) for token in seq]
+            for seq in label_ids
+        ]
+
+        model_inputs["labels"] = label_ids
         return model_inputs
 
     train_tokenized = train_ds.map(
@@ -150,7 +155,7 @@ def main():
         preprocess, batched=True, remove_columns=["text"]
     )
 
-    data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
+    data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, model=model)
 
     # training
     os.makedirs(args.output_dir, exist_ok=True)
@@ -164,7 +169,7 @@ def main():
         save_steps=500,
         save_total_limit=2,
         learning_rate=args.learning_rate,
-        predict_with_generate=True,
+        predict_with_generate=False,
         logging_dir=os.path.join(args.output_dir, "logs"),
         logging_steps=100,
         load_best_model_at_end=True,
