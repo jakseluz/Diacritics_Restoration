@@ -1,11 +1,12 @@
 import torch
-import torch.nn as nn
 from tqdm import tqdm
 import os
 from datetime import datetime
 
 
-def train_model(model, dataloader, epochs, optimizer, criterion, save_path="best_model.pt"):
+def train_CNN_model(
+    model, dataloader, epochs, optimizer, criterion, save_path="best_model.pt"
+):
     save_dir = "models/{}".format(model.__class__.__name__)
     os.makedirs(save_dir, exist_ok=True)
 
