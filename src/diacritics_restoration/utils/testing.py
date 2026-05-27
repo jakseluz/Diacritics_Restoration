@@ -6,6 +6,9 @@ from torch.utils.data import DataLoader
 
 
 def evaluate_restorer_on_articles(restorer: DiacriticsRestorer, num_articles=1000, batch_size=256):
+    print(
+        f"=== Evaluating on {num_articles} articles with batch size {batch_size}... ==="
+    )
     dataset = DiacriticsDataset(get_wikipedia_data(num_articles=num_articles)["text"].tolist())
     print("Dataset size:", len(dataset))
     dataloader = DataLoader(dataset, batch_size=batch_size)
@@ -14,6 +17,7 @@ def evaluate_restorer_on_articles(restorer: DiacriticsRestorer, num_articles=100
     model = restorer.model
     pad_id = dataset.processor.pad_token_id
 
+    print("Running predictions on the dataset...")
     pred_ids, true_ids, conf = predict_on_loader(
         model=model, dataloader=dataloader, device=device, return_confidence=True
     )
@@ -39,13 +43,11 @@ def evaluate_restorer_on_articles(restorer: DiacriticsRestorer, num_articles=100
             f"Differences (diacritics): {differences_diacritics} / {all_diacritics} (so far in all examples)"
         )
 
+    print("\n=== Overall Metrics on the dataset ===")
     mask = true_ids != pad_id
     total_differences = (pred_ids[mask] != true_ids[mask]).sum().item()
     total_chars = int(mask.sum().item())
     cer = total_differences / total_chars if total_chars > 0 else 0.0
-
-    pred_flat = dataset.processor.sequence_to_text(pred_ids[mask].tolist())
-    true_flat = dataset.processor.sequence_to_text(true_ids[mask].tolist())
 
     is_diacritic = torch.zeros(dataset.processor.vocab_size, dtype=torch.bool)
     for char in diacritics:
