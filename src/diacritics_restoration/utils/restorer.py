@@ -333,3 +333,53 @@ class ByT5DiacriticsRestorer(DiacriticsRestorer):
 
         self.texts_history[original_text] = restored_text
         return restored_text
+
+    @staticmethod
+    def _levenshtein_distance(a: str, b: str) -> int:
+        """
+        Iteracyjny Levenshtein (O(len(a)*len(b)) czasu, O(min(len)) pamięci).
+        """
+        if a == b:
+            return 0
+        if len(a) < len(b):
+            a, b = b, a  # a dłuższe
+
+        # teraz: len(a) >= len(b)
+        prev = list(range(len(b) + 1))
+        for i, ca in enumerate(a, start=1):
+            cur = [i]
+            for j, cb in enumerate(b, start=1):
+                ins = cur[j - 1] + 1
+                dele = prev[j] + 1
+                sub = prev[j - 1] + (0 if ca == cb else 1)
+                cur.append(min(ins, dele, sub))
+            prev = cur
+        return prev[-1]
+
+    def calculate_character_error_rate(
+        self, original_text: str, restored_text: str
+    ) -> float:
+        """
+        CER dla seq2seq: (edit distance) / len(original).
+        Jest odporny na różne długości wyjścia.
+        """
+        denom = len(original_text)
+        if denom == 0:
+            return 0.0
+        dist = self._levenshtein_distance(original_text, restored_text)
+        return dist / denom
+
+    def calculate_history_character_error_rate(self) -> float:
+        """
+        Liczenie po parach (oryginał -> predykcja), a nie przez konkatenację,
+        żeby nie mieszać granic przykładów.
+        """
+        total_dist = 0
+        total_chars = 0
+        for orig, pred in self.texts_history.items():
+            if not orig:
+                continue
+            total_dist += self._levenshtein_distance(orig, pred)
+            total_chars += len(orig)
+
+        return (total_dist / total_chars) if total_chars > 0 else 0.0
