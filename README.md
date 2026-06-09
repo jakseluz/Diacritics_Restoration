@@ -69,13 +69,21 @@ CER takes into account both situations and present the general model efficiency 
 ## Requirements
 
 - Python 3.12\
+  [pyproject.toml](./pyproject.toml)\
   [file with requirements](./requirements.txt)\
   [file with requirements - specific versions](./requirements_specific_versions.txt)\
   [environment file (optional)](./environment.yml)
 
 Install dependencies with:
 --
+### Recommended
+Install the project, using [pyproject.toml](./pyproject.toml):
+```bash
+pip install -e .
+```
+**(run the above command in the root directory of the project)**
 
+### Other ways
 Project initialised using conda environment. In order to create the one, run:
 ```bash
 conda create --name <env> --file requirements.txt
@@ -88,7 +96,12 @@ You can also probably work with other tools like pip:
 ``` bash
 pip install -r requirements.txt
 ```
-PS: In order not to have problems with your local CUDA configuration etc., please check [Pytorch prerequisites](https://pytorch.org/get-started/locally/) and copy a command to install Pytorch properly.
+or with specific dependencies versions:
+```bash
+pip install -r requirements_specific_versions.txt
+```
+### **Note**:
+In order not to have problems with your local CUDA configuration etc., please check [Pytorch prerequisites](https://pytorch.org/get-started/locally/) and copy a command to install Pytorch properly.
 
 ## Usage
 
@@ -99,7 +112,9 @@ PS: In order not to have problems with your local CUDA configuration etc., pleas
    cd Diacritics_Restoration
    ```
 
-2. Check **notebooks/[main.ipynb](./notebooks/main.ipynb) notebook file** for the tutorial and the project overview.
+2. See the above installation instruction.
+
+3. Check **notebooks/[main.ipynb](./notebooks/main.ipynb) notebook file** for the tutorial and the project overview.
 
 ## Author
 
