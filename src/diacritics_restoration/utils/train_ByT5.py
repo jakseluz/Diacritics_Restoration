@@ -119,6 +119,9 @@ def main():
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     model = AutoModelForSeq2SeqLM.from_pretrained(args.model_name)
+    model.config.tie_word_embeddings = False
+    model.config.use_cache = False
+    model.gradient_checkpointing_enable()
 
     def preprocess(batch):
         targets = batch["text"]
@@ -164,7 +167,8 @@ def main():
         num_train_epochs=args.epochs,
         per_device_train_batch_size=args.train_batch_size,
         per_device_eval_batch_size=args.eval_batch_size,
-        evaluation_strategy="steps",
+        eval_strategy="steps",
+        save_strategy="steps",
         eval_steps=500,
         save_steps=500,
         save_total_limit=2,
@@ -175,6 +179,7 @@ def main():
         load_best_model_at_end=True,
         metric_for_best_model="eval_loss",
         fp16=torch.cuda.is_available(),
+        optim="adafactor",
         report_to="none",
     )
 
@@ -184,7 +189,6 @@ def main():
         train_dataset=train_tokenized,
         eval_dataset=val_tokenized,
         data_collator=data_collator,
-        tokenizer=tokenizer,
     )
 
     trainer.train()
