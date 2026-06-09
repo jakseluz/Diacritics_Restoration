@@ -101,3 +101,24 @@ def decode_batch(processor, ids_2d: torch.Tensor):
     sequence_to_text removes <PAD> automatically in your processor.
     """
     return [processor.sequence_to_text(seq.tolist()) for seq in ids_2d]
+
+
+##################################################3
+def evaluate_byt5_restorer_on_articles(restorer, num_articles=1000):
+    print(f"=== Evaluating ByT5 on {num_articles} articles... ===")
+    texts = get_wikipedia_data(num_articles=num_articles)["text"].tolist()
+
+    # Inicjalizacja i przetwarzanie (restorer zapamiętuje wyniki w self.texts_history)
+    for i, text in enumerate(texts):
+        if not text.strip():
+            continue
+        restorer.restore(text)
+        if (i + 1) % max(1, (len(texts) // 10)) == 0:
+            print(f"Processed {i + 1}/{len(texts)} articles...")
+
+    cer = restorer.calculate_history_character_error_rate()
+    # Metoda z klasy bazowej DiacriticsRestorer
+    der = restorer.calculate_history_diacritics_error_rate()
+
+    print(f"\nOverall Character Error Rate (CER): {cer:.6f}")
+    print(f"Overall Diacritics Error Rate (DER): {der:.6f}")
