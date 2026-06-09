@@ -201,7 +201,7 @@ class ByT5DiacriticsRestorer(DiacriticsRestorer):
             "do_sample": False,
         }
 
-        mapping = {
+        self.mapping = {
             "ą": "a",
             "ć": "c",
             "ę": "e",
@@ -221,7 +221,7 @@ class ByT5DiacriticsRestorer(DiacriticsRestorer):
             "Ź": "Z",
             "Ż": "Z",
         }
-        self.trans_table = str.maketrans(mapping)
+        self.trans_table = str.maketrans(self.mapping)
         self.texts_history: dict[str, str] = {}
 
     def _normalize_no_diacritics(self, text: str) -> str:
@@ -327,7 +327,7 @@ class ByT5DiacriticsRestorer(DiacriticsRestorer):
         restored_text = "".join(outputs)
 
         if len(restored_text) < len(original_text):
-            restored_text += original_text[len(restored_text) :]
+            restored_text += src_text[len(restored_text) :]
         elif len(restored_text) > len(original_text):
             restored_text = restored_text[: len(original_text)]
 
