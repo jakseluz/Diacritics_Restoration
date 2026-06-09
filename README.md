@@ -70,7 +70,8 @@ CER takes into account both situations and present the general model efficiency 
 
 - Python 3.12\
   [file with requirements](./requirements.txt)\
-  [environment](./environment.yml)
+  [file with requirements - specific versions](./requirements_specific_versions.txt)\
+  [environment file (optional)](./environment.yml)
 
 Install dependencies with:
 --
@@ -98,7 +99,7 @@ PS: In order not to have problems with your local CUDA configuration etc., pleas
    cd Diacritics_Restoration
    ```
 
-2. Check **notebooks/[main.ipynb](./notebooks/main.ipynb) notebook file** for the tutorial.
+2. Check **notebooks/[main.ipynb](./notebooks/main.ipynb) notebook file** for the tutorial and the project overview.
 
 ## Author
 
